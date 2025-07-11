@@ -184,6 +184,12 @@
             background-color: rgba(211, 184, 163, 0.8);
             border-color: #876145;
         }
+        #back-to-main-menu-2 {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 50;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4 bg-cover bg-center">
@@ -191,6 +197,7 @@
     <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
     <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e0e0e0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
 </div>
+<button id="back-to-main-menu-2" class="btn-option font-bold py-2 px-4 rounded-lg hidden">Menü</button>
 
 <div id="app" class="w-full max-w-4xl mx-auto">
     <!-- Main Menu Screen -->
@@ -230,8 +237,6 @@
             <div id="progress-bar-container" class="w-full progress-bar-bg rounded-full h-4 mb-6">
                 <div id="progress-bar" class="progress-bar-fill h-4 rounded-full" style="width: 0%"></div>
             </div>
-
-            <button id="back-to-main-menu-2" class="btn-option font-bold py-2 px-4 rounded-lg absolute top-4 left-4 hidden">Menü</button>
 
             <!-- Question Area -->
             <div class="text-center mb-6">
@@ -377,6 +382,13 @@
             endlessMenuScreen.classList.add('hidden');
             gameScreen.classList.add('hidden');
             levelCompleteScreen.classList.add('hidden');
+
+            if (screen === gameScreen) {
+                backToMainMenu2.classList.remove('hidden');
+            } else {
+                backToMainMenu2.classList.add('hidden');
+            }
+
             screen.classList.remove('hidden');
         }
 
@@ -442,7 +454,6 @@
                 levelTitle.textContent = level.title;
                 questionsForCurrentLevel = shuffleArray([...level.questions]).slice(0, QUESTIONS_PER_LEVEL);
                 progressBarContainer.classList.remove('hidden');
-                backToMainMenu2.classList.remove('hidden'); // KORREKTUR
                 if (level.type === 'letters') {
                     optionsContainer.classList.remove('hidden');
                     wordInputArea.classList.add('hidden');
@@ -454,7 +465,6 @@
             } else { // Endless mode
                 levelTitle.textContent = `Endlos: ${endlessType.charAt(0).toUpperCase() + endlessType.slice(1)}`;
                 progressBarContainer.classList.add('hidden');
-                backToMainMenu2.classList.remove('hidden');
                 if (endlessType === 'letters') {
                     optionsContainer.classList.remove('hidden');
                     wordInputArea.classList.add('hidden');
