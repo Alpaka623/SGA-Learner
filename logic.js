@@ -116,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         score = 0;
         showScreen(gameScreen);
         setupLevel();
+        skipButton.classList.add('hidden');
     }
 
     function startEndlessMode(type) {
@@ -125,6 +126,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateScore();
         showScreen(gameScreen);
         setupLevel();
+        if(endlessType === 'letters') {
+            skipButton.classList.add('hidden');
+        }
     }
 
     function startNextLevel() {
@@ -174,6 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
         feedbackMessage.textContent = '';
         nextButton.classList.add('hidden');
 
+        console.log(level.type, endlessType, gameMode)
         if (endlessType === 'words' || endlessType === 'sentences' || gameMode === 'campaign' && (level.type === 'words' || level.type === 'sentences')) {
             skipButton.classList.remove('hidden');
         } else {
