@@ -178,3 +178,41 @@ body.light-mode {
     left: 20px;
     z-index: 50;
 }
+
+/* Cheatsheet Styles */
+#cheatsheet {
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    transform: translateY(20px);
+    opacity: 0;
+}
+
+#cheatsheet.hidden {
+    transform: translateY(20px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+#cheatsheet:not(.hidden) {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.cheatsheet-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 8px;
+    background-color: var(--btn-option-bg-dark);
+}
+
+.light-mode .cheatsheet-item {
+    background-color: var(--btn-option-bg-light);
+}
+
+.cheatsheet-char {
+    font-weight: bold;
+    font-size: 1.25rem;
+}

@@ -44,6 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const sunIcon = document.getElementById('theme-icon-sun');
     const moonIcon = document.getElementById('theme-icon-moon');
     const latinInputBox = document.getElementById('latin-input-box');
+    const cheatsheet = document.getElementById('cheatsheet');
+    const cheatsheetToggle = document.getElementById('cheatsheet-toggle');
+    const cheatsheetGrid = document.getElementById('cheatsheet-grid');
 
     // --- Event Listeners ---
     themeToggle.addEventListener('click', toggleTheme);
@@ -53,6 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
     backToMainMenu1.addEventListener('click', showMainMenu);
     backToMainMenu2.addEventListener('click', showMainMenu);
     latinInputBox.addEventListener('input', checkWordAnswer);
+    nextLevelButton.addEventListener('click', startNextLevel);
+    cheatsheetToggle.addEventListener('click', toggleCheatsheet);
 
     endlessSelectButtons.forEach(button => {
         button.addEventListener('click', () => startEndlessMode(button.dataset.type));
@@ -356,7 +361,44 @@ function checkWordAnswer() {
         return array;
     }
 
+    function populateCheatsheet() {
+        cheatsheetGrid.innerHTML = ''; // Leert das Gitter, um Duplikate zu vermeiden
+
+        for (const char in GALACTIC_PIXEL_DATA) {
+            const item = document.createElement('div');
+            item.className = 'cheatsheet-item';
+
+            const galacticChar = createPixelCharacter(char, 3);
+            const latinChar = document.createElement('div');
+            latinChar.className = 'cheatsheet-char';
+            latinChar.textContent = char;
+            
+            item.appendChild(galacticChar);
+            item.appendChild(latinChar);
+            cheatsheetGrid.appendChild(item);
+        }
+    }
+
+    function toggleCheatsheet() {
+        if (cheatsheet.classList.contains('hidden')) {
+            cheatsheet.classList.remove('hidden');
+            // Kleine Verzögerung, um den CSS-Übergang zu ermöglichen
+            setTimeout(() => {
+                cheatsheet.style.opacity = '1';
+                cheatsheet.style.transform = 'translateY(0)';
+            }, 10);
+        } else {
+            cheatsheet.style.opacity = '0';
+            cheatsheet.style.transform = 'translateY(20px)';
+            // Verstecken nach dem Übergang
+            setTimeout(() => {
+                cheatsheet.classList.add('hidden');
+            }, 300);
+        }
+    }
+
     // Initial setup
     updateThemeIcons();
+    populateCheatsheet();
     showMainMenu();
 });
