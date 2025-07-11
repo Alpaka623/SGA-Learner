@@ -36,10 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const questionDisplay = document.getElementById('question-display');
     const optionsContainer = document.getElementById('options-container');
     const wordInputArea = document.getElementById('word-input-area');
-    const inputBox = document.getElementById('input-box');
-    const galacticKeyboard = document.getElementById('galactic-keyboard');
-    const clearButton = document.getElementById('clear-button');
-    const backspaceButton = document.getElementById('backspace-button');
     const feedbackMessage = document.getElementById('feedback-message');
     const nextButton = document.getElementById('next-button');
     const levelCompleteTitle = document.getElementById('level-complete-title');
@@ -47,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.getElementById('theme-toggle');
     const sunIcon = document.getElementById('theme-icon-sun');
     const moonIcon = document.getElementById('theme-icon-moon');
+    const latinInputBox = document.getElementById('latin-input-box');
 
     // --- Event Listeners ---
     themeToggle.addEventListener('click', toggleTheme);
@@ -55,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     endlessModeButton.addEventListener('click', showEndlessMenu);
     backToMainMenu1.addEventListener('click', showMainMenu);
     backToMainMenu2.addEventListener('click', showMainMenu);
+    latinInputBox.addEventListener('input', checkWordAnswer);
 
     endlessSelectButtons.forEach(button => {
         button.addEventListener('click', () => startEndlessMode(button.dataset.type));
@@ -62,8 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     nextButton.addEventListener('click', nextQuestion);
     nextLevelButton.addEventListener('click', startNextLevel);
-    clearButton.addEventListener('click', clearInput);
-    backspaceButton.addEventListener('click', backspaceInput);
 
     function showScreen(screen) {
         mainMenuScreen.classList.add('hidden');
@@ -91,9 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleTheme() {
         body.classList.toggle('light-mode');
         updateThemeIcons();
-        if (!wordInputArea.classList.contains('hidden')) {
-            buildKeyboard();
-        }
     }
 
     function updateThemeIcons() {
@@ -142,14 +135,13 @@ document.addEventListener('DOMContentLoaded', () => {
             levelTitle.textContent = level.title;
             questionsForCurrentLevel = shuffleArray([...level.questions]).slice(0, QUESTIONS_PER_LEVEL);
             progressBarContainer.classList.remove('hidden');
-            if (level.type === 'letters') {
-                optionsContainer.classList.remove('hidden');
-                wordInputArea.classList.add('hidden');
-            } else {
-                optionsContainer.classList.add('hidden');
-                wordInputArea.classList.remove('hidden');
-                buildKeyboard();
-            }
+           if (level.type === 'letters') {
+            optionsContainer.classList.remove('hidden');
+            wordInputArea.classList.add('hidden');
+        } else { // Words and Sentences
+            optionsContainer.classList.add('hidden');
+            wordInputArea.classList.remove('hidden');
+        }
         } else { // Endless mode
             levelTitle.textContent = `Endlos: ${endlessType.charAt(0).toUpperCase() + endlessType.slice(1)}`;
             progressBarContainer.classList.add('hidden');
@@ -159,15 +151,14 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 optionsContainer.classList.add('hidden');
                 wordInputArea.classList.remove('hidden');
-                buildKeyboard();
             }
         }
         loadQuestion();
     }
 
     function loadQuestion() {
-        userInput = '';
-        updateInputBox();
+        latinInputBox.value = '';
+        latinInputBox.disabled = false;
         feedbackMessage.textContent = '';
         nextButton.classList.add('hidden');
         updateProgressBar();
@@ -215,13 +206,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 generateLatinOptions(answer);
             }
         } else { // Words and Sentences
-            instruction.textContent = type === 'words' ? "Schreibe das Wort:" : "Übersetze den Satz:";
-            const questionTextEl = document.createElement('div');
-            questionTextEl.textContent = answer;
-            questionTextEl.className = 'text-3xl font-bold tracking-widest';
-            questionDisplay.appendChild(questionTextEl);
-            checkWordAnswer();
+    instruction.textContent = type === 'words' ? "Welches Wort ist das?" : "Welcher Satz ist das?";
+    questionDisplay.innerHTML = ''; // Leert die alte Anzeige
+
+    const container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.flexWrap = 'wrap';
+    container.style.justifyContent = 'center';
+    container.style.alignItems = 'center';
+
+    for (const char of answer) {
+        if (char === ' ') {
+            const space = document.createElement('div');
+            space.style.width = '20px'; // Erzeugt einen Leerraum für Leerzeichen
+            container.appendChild(space);
+        } else {
+            // Fügt das galaktische Zeichen in Pixel-Form hinzu
+            container.appendChild(createPixelCharacter(char, 8));
         }
+    }
+    questionDisplay.appendChild(container);
+    latinInputBox.focus(); // Setzt den Fokus auf das Eingabefeld
+}
     }
 
     function generateLatinOptions(correctLetter) {
@@ -282,69 +288,18 @@ document.addEventListener('DOMContentLoaded', () => {
         nextButton.classList.remove('hidden');
     }
 
-    function buildKeyboard() {
-        galacticKeyboard.innerHTML = '';
-        const keys = shuffleArray([...LATIN_ALPHABET]);
-        keys.forEach(key => {
-            const keyElement = document.createElement('div');
-            keyElement.classList.add('keyboard-key', 'btn-option', 'p-2', 'rounded-md');
-            keyElement.dataset.key = key;
-            keyElement.appendChild(createPixelCharacter(key, 3));
-            keyElement.addEventListener('click', () => handleKeyPress(key));
-            galacticKeyboard.appendChild(keyElement);
-        });
-        const spacebar = document.createElement('div');
-        spacebar.textContent = 'SPACE';
-        spacebar.classList.add('keyboard-key', 'btn-option', 'p-2', 'rounded-md', 'col-span-3', 'md:col-span-2');
-        spacebar.addEventListener('click', () => handleKeyPress(' '));
-        galacticKeyboard.appendChild(spacebar);
-    }
+function checkWordAnswer() {
+    const currentUserInput = latinInputBox.value.toUpperCase();
 
-    function handleKeyPress(key) {
-        userInput += key;
-        updateInputBox();
-        checkWordAnswer();
+    if (currentUserInput === currentCorrectAnswer) {
+        feedbackMessage.textContent = 'Perfekt!';
+        feedbackMessage.style.color = '#22c55e';
+        score += 20;
+        updateScore();
+        nextButton.classList.remove('hidden');
+        latinInputBox.disabled = true; // Deaktiviert das Feld nach korrekter Antwort
     }
-
-    function updateInputBox() {
-        inputBox.innerHTML = '';
-        for(const char of userInput) {
-            if (char === ' ') {
-                const space = document.createElement('div');
-                space.style.width = '20px';
-                inputBox.appendChild(space);
-            } else {
-                inputBox.appendChild(createPixelCharacter(char, 5));
-            }
-        }
-    }
-
-    function clearInput() {
-        userInput = '';
-        updateInputBox();
-        checkWordAnswer();
-    }
-
-    function backspaceInput() {
-        userInput = userInput.slice(0, -1);
-        updateInputBox();
-        checkWordAnswer();
-    }
-
-    function checkWordAnswer() {
-        if (userInput === currentCorrectAnswer) {
-            feedbackMessage.textContent = 'Perfekt!';
-            feedbackMessage.style.color = '#22c55e';
-            score += 20;
-            updateScore();
-            nextButton.classList.remove('hidden');
-            galacticKeyboard.querySelectorAll('.keyboard-key').forEach(k => k.style.pointerEvents = 'none');
-        } else {
-            feedbackMessage.textContent = '';
-            nextButton.classList.add('hidden');
-            galacticKeyboard.querySelectorAll('.keyboard-key').forEach(k => k.style.pointerEvents = 'auto');
-        }
-    }
+}
 
     function nextQuestion() {
         if (gameMode === 'campaign') {
