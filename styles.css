@@ -97,7 +97,6 @@ body {
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: 10px;
 }
 .glowing-text {
     text-shadow: var(--glowing-text-shadow-dark);
