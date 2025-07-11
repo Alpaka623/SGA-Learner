@@ -174,8 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
         feedbackMessage.textContent = '';
         nextButton.classList.add('hidden');
 
-        if (endlessType === 'words' || endlessType === 'sentences' || gameMode === 'campaign' && level.type !== 'letters') {
-        skipButton.classList.remove('hidden');
+        if (endlessType === 'words' || endlessType === 'sentences' || gameMode === 'campaign' && (level.type === 'words' || level.type === 'sentences')) {
+            skipButton.classList.remove('hidden');
         } else {
             skipButton.classList.add('hidden');
         }
