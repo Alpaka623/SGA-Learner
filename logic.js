@@ -48,6 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const cheatsheetToggle = document.getElementById('cheatsheet-toggle');
     const cheatsheetGrid = document.getElementById('cheatsheet-grid');
     const skipButton = document.getElementById('skip-button');
+    const levelFailedScreen = document.getElementById('level-failed-screen');
+    const retryLevelButton = document.getElementById('retry-level-button');
 
     // --- Event Listeners ---
     themeToggle.addEventListener('click', toggleTheme);
@@ -60,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     nextLevelButton.addEventListener('click', startNextLevel);
     cheatsheetToggle.addEventListener('click', toggleCheatsheet);
     skipButton.addEventListener('click', skipQuestion);
+    retryLevelButton.addEventListener('click', retryLevel);
 
     endlessSelectButtons.forEach(button => {
         button.addEventListener('click', () => startEndlessMode(button.dataset.type));
@@ -73,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         endlessMenuScreen.classList.add('hidden');
         gameScreen.classList.add('hidden');
         levelCompleteScreen.classList.add('hidden');
+        levelFailedScreen.classList.add('hidden');
 
         if (screen === gameScreen) {
             backToMainMenu2.classList.remove('hidden');
@@ -164,12 +168,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadQuestion() {
+        const level = LEVELS[currentLevelIndex];
         latinInputBox.value = '';
         latinInputBox.disabled = false;
         feedbackMessage.textContent = '';
         nextButton.classList.add('hidden');
 
-        if (gameMode === 'endless' && (endlessType === 'words' || endlessType === 'sentences')) {
+        if (endlessType === 'words' || endlessType === 'sentences' || gameMode === 'campaign' && level.type !== 'letters') {
         skipButton.classList.remove('hidden');
         } else {
             skipButton.classList.add('hidden');
@@ -180,8 +185,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (gameMode === 'campaign') {
             if (currentQuestionIndex >= questionsForCurrentLevel.length) {
-                showScreen(levelCompleteScreen);
+                // Score-Überprüfung am Ende des Levels
                 const level = LEVELS[currentLevelIndex];
+                const requiredScore = (currentLevelIndex === 0) ? 60 : 120;
+
+                if (score < requiredScore) {
+                    showScreen(levelFailedScreen);
+                    if (currentLevelIndex === 1) { // Bei Scheitern in Level 2
+                        score = 60; // Setze Score auf 60 zurück
+                        updateScore();
+                    }else if (currentLevelIndex === 2) { // Bei Scheitern in Level 3
+                        score = 120; // Setze Score auf 120 zurück
+                        updateScore();
+                    }else {
+                        score = 0; // Setze Score auf 0 zurück
+                    }
+                    return;
+                }
+
+                // Level erfolgreich abgeschlossen
+                showScreen(levelCompleteScreen);
                 levelCompleteTitle.textContent = `${level.title} Abgeschlossen!`;
                 if (currentLevelIndex >= LEVELS.length - 1) {
                     nextLevelButton.textContent = "Hauptmenü";
@@ -204,9 +227,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function retryLevel() {
+        showScreen(gameScreen);
+        setupLevel();
+    }
+
     function setupQuestionUI(type, answer) {
         if (type === 'letters') {
-            const isReverseQuestion = Math.random() < 0.5; // 50% Chance für umgekehrte Frage
+            const isReverseQuestion = Math.random() < 0.5;
             if (isReverseQuestion) {
                 instruction.textContent = "Welches galaktische Zeichen ist das?";
                 const questionTextEl = document.createElement('div');
@@ -408,9 +436,16 @@ function checkWordAnswer() {
     }
 
     function skipQuestion() {
-        score = Math.floor(score / 2); // Punktzahl halbieren und abrunden
-        updateScore();
-        loadQuestion(); // Nächste Frage laden
+        if  (gameMode === 'campaign') {
+            score -= 10; // Punktzahl um 10 reduzieren
+            updateScore();
+            currentQuestionIndex++;
+            loadQuestion();
+        } else { // Endless mode
+                score = Math.floor(score / 2); // Punktzahl halbieren und abrunden
+                updateScore();
+                loadQuestion(); 
+        }
     }
 
     // Initial setup
