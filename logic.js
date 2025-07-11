@@ -179,7 +179,8 @@ document.addEventListener('DOMContentLoaded', () => {
         nextButton.classList.add('hidden');
 
         console.log(level.type, endlessType, gameMode)
-        if (endlessType === 'words' || endlessType === 'sentences' || gameMode === 'campaign' && (level.type === 'words' || level.type === 'sentences')) {
+        if (gameMode === 'endless' && (endlessType === 'words' || endlessType === 'sentences')
+             || gameMode === 'campaign' && (level.type === 'words' || level.type === 'sentences')) {
             skipButton.classList.remove('hidden');
         } else {
             skipButton.classList.add('hidden');
