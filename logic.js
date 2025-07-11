@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cheatsheet = document.getElementById('cheatsheet');
     const cheatsheetToggle = document.getElementById('cheatsheet-toggle');
     const cheatsheetGrid = document.getElementById('cheatsheet-grid');
+    const skipButton = document.getElementById('skip-button');
 
     // --- Event Listeners ---
     themeToggle.addEventListener('click', toggleTheme);
@@ -58,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     latinInputBox.addEventListener('input', checkWordAnswer);
     nextLevelButton.addEventListener('click', startNextLevel);
     cheatsheetToggle.addEventListener('click', toggleCheatsheet);
+    skipButton.addEventListener('click', skipQuestion);
 
     endlessSelectButtons.forEach(button => {
         button.addEventListener('click', () => startEndlessMode(button.dataset.type));
@@ -166,6 +168,13 @@ document.addEventListener('DOMContentLoaded', () => {
         latinInputBox.disabled = false;
         feedbackMessage.textContent = '';
         nextButton.classList.add('hidden');
+
+        if (gameMode === 'endless' && (endlessType === 'words' || endlessType === 'sentences')) {
+        skipButton.classList.remove('hidden');
+        } else {
+            skipButton.classList.add('hidden');
+        }
+
         updateProgressBar();
         questionDisplay.innerHTML = '';
 
@@ -197,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setupQuestionUI(type, answer) {
         if (type === 'letters') {
-            const isReverseQuestion = Math.random() < 0.4;
+            const isReverseQuestion = Math.random() < 0.5; // 50% Chance für umgekehrte Frage
             if (isReverseQuestion) {
                 instruction.textContent = "Welches galaktische Zeichen ist das?";
                 const questionTextEl = document.createElement('div');
@@ -302,7 +311,8 @@ function checkWordAnswer() {
         score += 20;
         updateScore();
         nextButton.classList.remove('hidden');
-        latinInputBox.disabled = true; // Deaktiviert das Feld nach korrekter Antwort
+        latinInputBox.disabled = true;
+        skipButton.classList.add('hidden');
     }
 }
 
@@ -395,6 +405,12 @@ function checkWordAnswer() {
                 cheatsheet.classList.add('hidden');
             }, 300);
         }
+    }
+
+    function skipQuestion() {
+        score = Math.floor(score / 2); // Punktzahl halbieren und abrunden
+        updateScore();
+        loadQuestion(); // Nächste Frage laden
     }
 
     // Initial setup
