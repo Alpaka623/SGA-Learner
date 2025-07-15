@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showMainMenu() {
         cheatsheetToggle.classList.remove('hidden')
-        cheatsheet.classList.remove('hidden')
+        cheatsheet.classList.add('hidden')
         if (gameMode === 'endless' && score > 0) {
             // Übergebe den "endlessType" (letters, words, sentences)
             saveScore(score, endlessType);
@@ -544,10 +544,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     btn.classList.add('correct');
                 }
             });
-            if(gameMode === 'campaign') {
+            if(gameMode === 'endless') {
                 score = Math.floor(score / 2); // Punktzahl halbieren
                 updateScore();
-                console.log("Score nach falscher Antwort:", score);
             }
         }
         nextButton.classList.remove('hidden');
