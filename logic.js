@@ -545,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             if(gameMode === 'campaign') {
-                score /= 2; // Punktzahl um 50% reduzieren
+                score = score/2; // Punktzahl halbieren
                 updateScore();
             }
         }
