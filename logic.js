@@ -529,7 +529,11 @@ document.addEventListener('DOMContentLoaded', () => {
             feedbackMessage.textContent = 'Korrekt!';
             feedbackMessage.style.color = '#22c55e';
             button.classList.add('correct');
-            score += 10;
+            if( gameMode === 'campaign') {
+                score += 10;
+            } else {
+                score += berechneDynamischePunkte(score);
+            }
             updateScore();
         } else {
             feedbackMessage.textContent = `Falsch! Richtig wäre: ${currentCorrectAnswer}`;
@@ -540,8 +544,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     btn.classList.add('correct');
                 }
             });
+            if(gameMode === 'campaign') {
+                score /= 2; // Punktzahl um 50% reduzieren
+                updateScore();
+            }
         }
         nextButton.classList.remove('hidden');
+    }
+
+    function berechneDynamischePunkte(aktuellerPunktestand) {
+    const startpunkte = 20;
+    const mindestpunkte = 1;
+
+    // Ein HÖHERER Wert lässt die Punkte VIEL SCHNELLER fallen.
+    const abfallrate = 0.0035;
+
+    const punkte = mindestpunkte + 
+                    (startpunkte - mindestpunkte) * Math.exp(-abfallrate * aktuellerPunktestand);
+    
+    return Math.max(mindestpunkte, Math.round(punkte));
     }
 
 function checkWordAnswer() {
