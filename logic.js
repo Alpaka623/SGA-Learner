@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .select('user_id, score')
                 .eq('game_mode', mode) // Wichtig: Hier filtern wir den Modus
                 .order('score', { ascending: false })
-                .limit(10);
+                .limit(5);
 
             if (scoresError) throw scoresError;
 
@@ -213,19 +213,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function saveScore(finalScore, gameType) { // Neuer Parameter "gameType"
+    async function saveScore(finalScore, gameType) {
         if (finalScore <= 0) return;
 
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return;
 
-        // Hier wird der game_mode jetzt mitgespeichert
-        const { error } = await supabaseClient
-            .from('scores')
-            .insert([{ user_id: user.id, score: finalScore, game_mode: gameType }]);
+        try {
+            // Schritt 1: Hole die aktuellen Top 5 Scores für diesen Modus
+            const { data: topScores, error: fetchError } = await supabaseClient
+                .from('scores')
+                .select('id, score')
+                .eq('game_mode', gameType)
+                .order('score', { descending: true })
+                .limit(5);
 
-        if (error) console.error("Fehler beim Speichern des Scores:", error);
-        else console.log("Score erfolgreich gespeichert für Modus:", gameType);
+            if (fetchError) throw fetchError;
+
+            // Schritt 2: Prüfe, ob der neue Score gut genug ist
+            const isTopFive = topScores.length < 5 || finalScore > topScores[topScores.length - 1].score;
+
+            if (isTopFive) {
+                console.log("Neuer Highscore! Speichere und räume auf...");
+
+                // Schritt 3: Füge den neuen Score ein
+                const { error: insertError } = await supabaseClient
+                    .from('scores')
+                    .insert({ user_id: user.id, score: finalScore, game_mode: gameType });
+
+                if (insertError) throw insertError;
+
+                // Schritt 4: Wenn die Liste jetzt zu lang ist, lösche den schlechtesten Score
+                if (topScores.length >= 5) {
+                    const scoreToDelete = topScores[topScores.length - 1];
+                    const { error: deleteError } = await supabaseClient
+                        .from('scores')
+                        .delete()
+                        .eq('id', scoreToDelete.id);
+
+                    if (deleteError) throw deleteError;
+                    console.log(`Schlechtester Score (ID: ${scoreToDelete.id}) wurde entfernt.`);
+                }
+                console.log("Score erfolgreich gespeichert!");
+
+            } else {
+                console.log("Score nicht hoch genug für die Top 5.");
+            }
+
+        } catch (error) {
+            console.error("Ein Fehler ist im Highscore-Prozess aufgetreten:", error);
+        }
     }
 
     function showScreen(screen) {
