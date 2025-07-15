@@ -81,8 +81,14 @@ document.addEventListener('DOMContentLoaded', () => {
     cheatsheetToggle.addEventListener('click', toggleCheatsheet);
     skipButton.addEventListener('click', skipQuestion);
     retryLevelButton.addEventListener('click', retryLevel);
-    highscoreButton.addEventListener('click', showHighscores);
+    highscoreButton.addEventListener('click', () => showHighscores('letters'));
     backToMainMenu3.addEventListener('click', showMainMenu);
+
+    document.querySelectorAll('#highscore-mode-selector button').forEach(button => {
+        button.addEventListener('click', () => {
+            showHighscores(button.dataset.mode);
+        });
+    });
 
     endlessSelectButtons.forEach(button => {
         button.addEventListener('click', () => startEndlessMode(button.dataset.type));
@@ -151,26 +157,54 @@ document.addEventListener('DOMContentLoaded', () => {
         showScreen(authScreen);
     });
 
-    async function showHighscores() {
+    async function showHighscores(mode = 'letters') {
+        console.log(mode)
         showScreen(highscoreScreen);
         highscoreList.innerHTML = '<p>Lade Highscores...</p>';
 
+        // Markiere den aktiven Button
+        document.querySelectorAll('#highscore-mode-selector button').forEach(btn => {
+            btn.classList.remove('btn-primary');
+            if (btn.dataset.mode === mode) {
+                btn.classList.add('btn-primary');
+            }
+        });
+
         try {
-            // Wir rufen nur noch unsere eine, neue Datenbank-Funktion auf.
-            const { data, error } = await supabaseClient.rpc('get_top_scores_with_usernames');
+            // Schritt 1: Hole die Top-Scores für den ausgewählten Modus
+            const { data: scoresData, error: scoresError } = await supabaseClient
+                .from('scores')
+                .select('user_id, score')
+                .eq('game_mode', mode) // Wichtig: Hier filtern wir den Modus
+                .order('score', { ascending: false })
+                .limit(10);
 
-            if (error) throw error; // Wenn ein Fehler auftritt, wird er unten gefangen.
+            if (scoresError) throw scoresError;
 
-            if (data.length === 0) {
-                highscoreList.innerHTML = '<p>Noch keine Highscores vorhanden.</p>';
+            if (scoresData.length === 0) {
+                highscoreList.innerHTML = '<p>Noch keine Highscores für diesen Modus.</p>';
                 return;
             }
 
-            // Die Daten kommen schon perfekt formatiert zurück.
-            highscoreList.innerHTML = data.map((entry, index) => `
+            // Schritt 2: Sammle alle einzigartigen User-IDs
+            const userIds = [...new Set(scoresData.map(entry => entry.user_id))];
+
+            // Schritt 3: Hole die passenden User-Profile
+            const { data: profilesData, error: profilesError } = await supabaseClient
+                .from('profiles') // Wir nutzen die sichere "profiles"-Ansicht
+                .select('id, raw_user_meta_data')
+                .in('id', userIds);
+
+            if (profilesError) throw profilesError;
+
+            // Erstelle eine "Landkarte" für schnellen Zugriff auf die Usernamen
+            const userMap = new Map(profilesData.map(p => [p.id, p.raw_user_meta_data.username]));
+
+            // Schritt 4: Kombiniere Scores mit den Usernamen und zeige sie an
+            highscoreList.innerHTML = scoresData.map((entry, index) => `
             <div class="flex justify-between items-center p-2 rounded ${index % 2 === 0 ? 'bg-gray-700' : ''}">
-                <span class="font-bold">${index + 1}. ${entry.username || 'Unbekannt'}</span>
-                <span>${entry.max_score}</span>
+                <span class="font-bold">${index + 1}. ${userMap.get(entry.user_id) || 'Unbekannt'}</span>
+                <span>${entry.score}</span>
             </div>
         `).join('');
 
@@ -180,18 +214,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function saveScore(finalScore) {
+    async function saveScore(finalScore, gameType) { // Neuer Parameter "gameType"
         if (finalScore <= 0) return;
 
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return;
 
+        // Hier wird der game_mode jetzt mitgespeichert
         const { error } = await supabaseClient
             .from('scores')
-            .insert([{ user_id: user.id, score: finalScore }]);
+            .insert([{ user_id: user.id, score: finalScore, game_mode: gameType }]);
 
         if (error) console.error("Fehler beim Speichern des Scores:", error);
-        else console.log("Score erfolgreich gespeichert!");
+        else console.log("Score erfolgreich gespeichert für Modus:", gameType);
     }
 
     function showScreen(screen) {
@@ -216,11 +251,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showMainMenu() {
-        // Speichere den Score, NUR wenn der User aus dem Endlos-Modus kommt UND Punkte hat
         if (gameMode === 'endless' && score > 0) {
-            saveScore(score);
-            score = 0; // Wichtig: Score zurücksetzen, damit er nicht erneut gespeichert wird
-            updateScore(); // Anzeige aktualisieren
+            // Übergebe den "endlessType" (letters, words, sentences)
+            saveScore(score, endlessType);
+            score = 0;
+            updateScore();
         }
         showScreen(mainMenuScreen);
     }

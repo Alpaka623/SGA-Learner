@@ -57,8 +57,15 @@
 
     <div id="highscore-screen" class="hidden text-center">
         <div class="card rounded-xl p-8 shadow-2xl">
-            <h1 class="text-4xl font-bold mb-6 menu-title" style="font-family: 'Orbitron', sans-serif;">Highscores</h1>
-            <div id="highscore-list" class="space-y-2 text-left max-w-md mx-auto">
+            <h1 class="text-4xl font-bold mb-4 menu-title" style="font-family: 'Orbitron', sans-serif;">Highscores</h1>
+
+            <div id="highscore-mode-selector" class="flex justify-center gap-2 mb-6">
+                <button data-mode="letters" class="btn-option font-bold py-2 px-4 rounded-lg">Buchstaben</button>
+                <button data-mode="words" class="btn-option font-bold py-2 px-4 rounded-lg">Wörter</button>
+                <button data-mode="sentences" class="btn-option font-bold py-2 px-4 rounded-lg">Sätze</button>
+            </div>
+
+            <div id="highscore-list" class="space-y-2 text-left max-w-md mx-auto min-h-[200px]">
             </div>
             <button id="back-to-main-menu-3" class="btn-option font-bold py-2 px-6 rounded-lg mt-8">Zurück zum Menü</button>
         </div>
