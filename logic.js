@@ -571,7 +571,11 @@ function checkWordAnswer() {
     if (currentUserInput === currentCorrectAnswer) {
         feedbackMessage.textContent = 'Perfekt!';
         feedbackMessage.style.color = '#22c55e';
-        score += 20;
+        if (gameMode === 'campaign') {
+            score += 20;
+        } else {
+            score += berechneDynamischePunkte(score);
+        }
         updateScore();
         nextButton.classList.remove('hidden');
         latinInputBox.disabled = true;
