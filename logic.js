@@ -545,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             if(gameMode === 'campaign') {
-                score = score/2; // Punktzahl halbieren
+                score = Math.floor(score / 2); // Punktzahl halbieren
                 updateScore();
             }
         }
