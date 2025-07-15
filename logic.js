@@ -547,6 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(gameMode === 'campaign') {
                 score = Math.floor(score / 2); // Punktzahl halbieren
                 updateScore();
+                console.log("Score nach falscher Antwort:", score);
             }
         }
         nextButton.classList.remove('hidden');
