@@ -158,7 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function showHighscores(mode = 'letters') {
-        console.log(mode)
         showScreen(highscoreScreen);
         highscoreList.innerHTML = '<p>Lade Highscores...</p>';
 
@@ -251,6 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showMainMenu() {
+        cheatsheetToggle.classList.remove('hidden')
+        cheatsheet.classList.remove('hidden')
         if (gameMode === 'endless' && score > 0) {
             // Übergebe den "endlessType" (letters, words, sentences)
             saveScore(score, endlessType);
@@ -289,6 +290,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startEndlessMode(type) {
+        cheatsheetToggle.classList.add('hidden')
+        cheatsheet.classList.add('hidden')
         gameMode = 'endless';
         endlessType = type;
         score = 0;
@@ -347,7 +350,6 @@ document.addEventListener('DOMContentLoaded', () => {
         feedbackMessage.textContent = '';
         nextButton.classList.add('hidden');
 
-        console.log(level.type, endlessType, gameMode)
         if (gameMode === 'endless' && (endlessType === 'words' || endlessType === 'sentences')
              || gameMode === 'campaign' && (level.type === 'words' || level.type === 'sentences')) {
             skipButton.classList.remove('hidden');
