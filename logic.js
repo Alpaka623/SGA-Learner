@@ -1,3 +1,8 @@
+const { createClient } = supabase;
+const supabaseUrl = 'https://htzhplsnibiosetcrmkx.supabase.co'
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0emhwbHNuaWJpb3NldGNybWt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzE0NTksImV4cCI6MjA2ODE0NzQ1OX0.wZ7uxtEqj76GQbgSgntJG9qBVcY4Wap-EJfoywhQm4s'
+const supabaseClient = createClient(supabaseUrl, supabaseKey)
+
 document.addEventListener('DOMContentLoaded', () => {
     const LATIN_ALPHABET = Object.keys(GALACTIC_PIXEL_DATA);
     const LEVELS = [
@@ -51,6 +56,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const levelFailedScreen = document.getElementById('level-failed-screen');
     const retryLevelButton = document.getElementById('retry-level-button');
 
+    const authScreen = document.getElementById('auth-screen');
+    const highscoreScreen = document.getElementById('highscore-screen');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const authError = document.getElementById('auth-error');
+    const tabLogin = document.getElementById('tab-login');
+    const tabRegister = document.getElementById('tab-register');
+    const logoutButton = document.getElementById('logout-button');
+    const welcomeMessage = document.getElementById('welcome-message');
+    const highscoreButton = document.getElementById('highscore-button');
+    const highscoreList = document.getElementById('highscore-list');
+    const backToMainMenu3 = document.getElementById('back-to-main-menu-3');
+
     // --- Event Listeners ---
     themeToggle.addEventListener('click', toggleTheme);
 
@@ -63,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
     cheatsheetToggle.addEventListener('click', toggleCheatsheet);
     skipButton.addEventListener('click', skipQuestion);
     retryLevelButton.addEventListener('click', retryLevel);
+    highscoreButton.addEventListener('click', showHighscores);
+    backToMainMenu3.addEventListener('click', showMainMenu);
 
     endlessSelectButtons.forEach(button => {
         button.addEventListener('click', () => startEndlessMode(button.dataset.type));
@@ -71,23 +91,135 @@ document.addEventListener('DOMContentLoaded', () => {
     nextButton.addEventListener('click', nextQuestion);
     nextLevelButton.addEventListener('click', startNextLevel);
 
+    tabLogin.addEventListener('click', () => {
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+        tabLogin.classList.remove('text-gray-400');
+        tabRegister.classList.add('text-gray-400');
+    });
+
+    tabRegister.addEventListener('click', () => {
+        loginForm.classList.add('hidden');
+        registerForm.classList.remove('hidden');
+        tabLogin.classList.add('text-gray-400');
+        tabRegister.classList.remove('text-gray-400');
+    });
+
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        authError.textContent = '';
+        const username = document.getElementById('register-username').value;
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+
+        const { error } = await supabaseClient.auth.signUp({
+            email,
+            password,
+            options: { data: { username: username } }
+        });
+
+        if (error) {
+            authError.textContent = "Fehler: " + error.message;
+        } else {
+            alert('Registrierung erfolgreich! Bitte prüfe deine E-Mails zur Bestätigung.');
+            checkUserSession();
+        }
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        authError.textContent = '';
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        const { error } = await supabaseClient.auth.signInWithPassword({
+            email,
+            password,
+        });
+
+        if (error) {
+            authError.textContent = "Fehler: " + error.message;
+        } else {
+            checkUserSession();
+        }
+    });
+
+    logoutButton.addEventListener('click', async () => {
+        await supabaseClient.auth.signOut();
+        showScreen(authScreen);
+    });
+
+    async function showHighscores() {
+        showScreen(highscoreScreen);
+        highscoreList.innerHTML = '<p>Lade Highscores...</p>';
+
+        // HINWEIS: Diese Datenbank-Funktion musst du in Supabase erstellen!
+        // Gehe zu "Database" -> "Functions" -> "+ Create a function"
+        // Name: get_top_scores_with_usernames
+        // Code: Siehe Anhang unten
+        const { data, error } = await supabaseClient.rpc('get_top_scores_with_usernames');
+
+        if (error) {
+            highscoreList.innerHTML = '<p class="text-red-500">Fehler: ' + error.message + '</p>';
+            console.error(error);
+            return;
+        }
+
+        if (data.length === 0) {
+            highscoreList.innerHTML = '<p>Noch keine Highscores vorhanden.</p>';
+            return;
+        }
+
+        highscoreList.innerHTML = data.map((entry, index) => `
+        <div class="flex justify-between items-center p-2 rounded ${index % 2 === 0 ? 'bg-gray-700' : ''}">
+            <span class="font-bold">${index + 1}. ${entry.username || 'Unbekannt'}</span>
+            <span>${entry.max_score}</span>
+        </div>
+    `).join('');
+    }
+
+    async function saveScore(finalScore) {
+        if (finalScore <= 0) return;
+
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabaseClient
+            .from('scores')
+            .insert([{ user_id: user.id, score: finalScore }]);
+
+        if (error) console.error("Fehler beim Speichern des Scores:", error);
+        else console.log("Score erfolgreich gespeichert!");
+    }
+
     function showScreen(screen) {
+        // Alle Screens verstecken
+        authScreen.classList.add('hidden');
         mainMenuScreen.classList.add('hidden');
+        highscoreScreen.classList.add('hidden');
         endlessMenuScreen.classList.add('hidden');
         gameScreen.classList.add('hidden');
         levelCompleteScreen.classList.add('hidden');
         levelFailedScreen.classList.add('hidden');
 
+        // Den richtigen Screen anzeigen
+        screen.classList.remove('hidden');
+
+        // Menü-Button nur im Game-Screen anzeigen
         if (screen === gameScreen) {
             backToMainMenu2.classList.remove('hidden');
         } else {
             backToMainMenu2.classList.add('hidden');
         }
-
-        screen.classList.remove('hidden');
     }
 
     function showMainMenu() {
+        // Speichere den Score, NUR wenn der User aus dem Endlos-Modus kommt UND Punkte hat
+        if (gameMode === 'endless' && score > 0) {
+            saveScore(score);
+            score = 0; // Wichtig: Score zurücksetzen, damit er nicht erneut gespeichert wird
+            updateScore(); // Anzeige aktualisieren
+        }
         showScreen(mainMenuScreen);
     }
 
@@ -454,8 +586,20 @@ function checkWordAnswer() {
         }
     }
 
+    async function checkUserSession() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) {
+            const username = session.user.user_metadata.username || session.user.email;
+            welcomeMessage.textContent = `Willkommen, ${username}!`;
+            showScreen(mainMenuScreen);
+        } else {
+            showScreen(authScreen);
+        }
+    }
+
     // Initial setup
     updateThemeIcons();
     populateCheatsheet();
+    checkUserSession();
     showMainMenu();
 });

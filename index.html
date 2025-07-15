@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SGA-Learner</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
@@ -19,13 +20,47 @@
 <button id="back-to-main-menu-2" class="btn-option font-bold py-2 px-4 rounded-lg hidden">Menü</button>
 
 <div id="app" class="w-full max-w-4xl mx-auto">
-    <!-- Main Menu Screen -->
-    <div id="main-menu-screen" class="text-center">
-        <h1 class="text-5xl font-bold mb-4 glowing-text" style="font-family: 'Orbitron', sans-serif;">Galactic Alphabet Trainer</h1>
-        <p class="text-xl mb-8">Werde ein Meister der intergalaktischen Kommunikation.</p>
+    <div id="auth-screen" class="hidden text-center">
+        <div class="card rounded-xl p-8 shadow-2xl max-w-sm mx-auto">
+            <h1 class="text-4xl font-bold mb-6 menu-title" style="font-family: 'Orbitron', sans-serif;">Galactic Trainer</h1>
+            <div id="auth-tabs" class="flex mb-4 border-b border-gray-500">
+                <button id="tab-login" class="flex-1 py-2 font-bold text-white transition-colors">Login</button>
+                <button id="tab-register" class="flex-1 py-2 text-gray-400 transition-colors">Registrieren</button>
+            </div>
+            <form id="login-form" class="flex flex-col gap-4">
+                <input type="email" id="login-email" placeholder="E-Mail" class="p-3 rounded-lg bg-gray-800 text-white border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400" required>
+                <input type="password" id="login-password" placeholder="Passwort" class="p-3 rounded-lg bg-gray-800 text-white border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400" required>
+                <button type="submit" class="btn-primary text-white font-bold py-3 px-8 rounded-lg text-xl">Einloggen</button>
+            </form>
+            <form id="register-form" class="hidden flex flex-col gap-4">
+                <input type="text" id="register-username" placeholder="Benutzername" class="p-3 rounded-lg bg-gray-800 text-white border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400" required>
+                <input type="email" id="register-email" placeholder="E-Mail" class="p-3 rounded-lg bg-gray-800 text-white border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400" required>
+                <input type="password" id="register-password" placeholder="Passwort" class="p-3 rounded-lg bg-gray-800 text-white border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400" required>
+                <button type="submit" class="btn-primary text-white font-bold py-3 px-8 rounded-lg text-xl">Registrieren</button>
+            </form>
+            <p id="auth-error" class="text-red-500 mt-4 h-4"></p>
+        </div>
+    </div>
+
+
+    <div id="main-menu-screen" class="hidden text-center">
+        <h1 class="text-5xl font-bold mb-2 glowing-text" style="font-family: 'Orbitron', sans-serif;">Galactic Alphabet Trainer</h1>
+        <p id="welcome-message" class="text-xl mb-6">Willkommen zurück!</p>
         <div class="flex flex-col items-center gap-4">
             <button id="campaign-button" class="btn-menu text-white font-bold py-3 px-8 rounded-lg text-2xl w-64">Kampagne</button>
             <button id="endless-mode-button" class="btn-menu text-white font-bold py-3 px-8 rounded-lg text-2xl w-64">Endlos-Modus</button>
+            <button id="highscore-button" class="btn-menu text-white font-bold py-3 px-8 rounded-lg text-2xl w-64">Highscores</button>
+            <button id="logout-button" class="btn-option font-bold py-2 px-6 rounded-lg mt-8">Ausloggen</button>
+        </div>
+    </div>
+
+
+    <div id="highscore-screen" class="hidden text-center">
+        <div class="card rounded-xl p-8 shadow-2xl">
+            <h1 class="text-4xl font-bold mb-6 menu-title" style="font-family: 'Orbitron', sans-serif;">Highscores</h1>
+            <div id="highscore-list" class="space-y-2 text-left max-w-md mx-auto">
+            </div>
+            <button id="back-to-main-menu-3" class="btn-option font-bold py-2 px-6 rounded-lg mt-8">Zurück zum Menü</button>
         </div>
     </div>
 
@@ -113,6 +148,6 @@
 </div>
 
 <script src="data.js"></script>
-<script src="logic.js"></script>
+<script type="module" src="logic.js"></script>
 </body>
 </html>
