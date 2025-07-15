@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Mail Verifizierung - SGA-Learner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 bg-cover bg-center">
+<div class="card rounded-xl p-8 shadow-2xl text-center">
+    <h1 id="message-title" class="text-3xl font-bold mb-4 menu-title">E-Mail wird verifiziert...</h1>
+    <p id="message-text" class="text-xl mb-6">Bitte einen Moment Geduld.</p>
+    <a href="index.html" id="redirect-button" class="btn-primary text-white font-bold py-3 px-8 rounded-lg text-xl hidden">
+        Weiter zum Spiel
+    </a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // Supabase Client initialisieren
+    const supabaseUrl = 'https://htzhplsnibiosetcrmkx.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0emhwbHNuaWJpb3NldGNybWt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA1NTI0MDUsImV4cCI6MjAzNjEyODQwNX0.s1m_xI_pT6s0g2nFm-m_21M1oP52e4w1sOlx4gQ1jM8';
+    const { createClient } = supabase;
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+    // Auf Authentifizierungs-Events lauschen
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        // Wenn der User durch den Link in der E-Mail hier landet,
+        // ist das Event 'SIGNED_IN' und die Verifizierung war erfolgreich.
+        if (event === 'SIGNED_IN') {
+            document.getElementById('message-title').textContent = 'Verifizierung erfolgreich!';
+            document.getElementById('message-text').textContent = 'Dein Konto ist jetzt aktiviert. Du kannst diese Seite schließen.';
+            document.getElementById('redirect-button').classList.remove('hidden');
+        }
+    });
+</script>
+</body>
+</html>

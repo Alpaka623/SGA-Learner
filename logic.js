@@ -121,8 +121,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (error) {
             authError.textContent = "Fehler: " + error.message;
         } else {
+            /*checkUserSession();*/
             alert('Registrierung erfolgreich! Bitte prüfe deine E-Mails zur Bestätigung.');
-            checkUserSession();
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
         }
     });
 
@@ -153,29 +155,29 @@ document.addEventListener('DOMContentLoaded', () => {
         showScreen(highscoreScreen);
         highscoreList.innerHTML = '<p>Lade Highscores...</p>';
 
-        // HINWEIS: Diese Datenbank-Funktion musst du in Supabase erstellen!
-        // Gehe zu "Database" -> "Functions" -> "+ Create a function"
-        // Name: get_top_scores_with_usernames
-        // Code: Siehe Anhang unten
-        const { data, error } = await supabaseClient.rpc('get_top_scores_with_usernames');
+        try {
+            // Wir rufen nur noch unsere eine, neue Datenbank-Funktion auf.
+            const { data, error } = await supabaseClient.rpc('get_top_scores_with_usernames');
 
-        if (error) {
-            highscoreList.innerHTML = '<p class="text-red-500">Fehler: ' + error.message + '</p>';
-            console.error(error);
-            return;
+            if (error) throw error; // Wenn ein Fehler auftritt, wird er unten gefangen.
+
+            if (data.length === 0) {
+                highscoreList.innerHTML = '<p>Noch keine Highscores vorhanden.</p>';
+                return;
+            }
+
+            // Die Daten kommen schon perfekt formatiert zurück.
+            highscoreList.innerHTML = data.map((entry, index) => `
+            <div class="flex justify-between items-center p-2 rounded ${index % 2 === 0 ? 'bg-gray-700' : ''}">
+                <span class="font-bold">${index + 1}. ${entry.username || 'Unbekannt'}</span>
+                <span>${entry.max_score}</span>
+            </div>
+        `).join('');
+
+        } catch (error) {
+            highscoreList.innerHTML = `<p class="text-red-500">Fehler: ${error.message}</p>`;
+            console.error("Fehler beim Laden der Highscores:", error);
         }
-
-        if (data.length === 0) {
-            highscoreList.innerHTML = '<p>Noch keine Highscores vorhanden.</p>';
-            return;
-        }
-
-        highscoreList.innerHTML = data.map((entry, index) => `
-        <div class="flex justify-between items-center p-2 rounded ${index % 2 === 0 ? 'bg-gray-700' : ''}">
-            <span class="font-bold">${index + 1}. ${entry.username || 'Unbekannt'}</span>
-            <span>${entry.max_score}</span>
-        </div>
-    `).join('');
     }
 
     async function saveScore(finalScore) {
