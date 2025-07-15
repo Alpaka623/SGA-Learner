@@ -157,59 +157,49 @@ document.addEventListener('DOMContentLoaded', () => {
         showScreen(authScreen);
     });
 
-    async function showHighscores(mode = 'letters') {
-        showScreen(highscoreScreen);
-        highscoreList.innerHTML = '<p>Lade Highscores...</p>';
+    async function saveScore(finalScore, gameType) {
+        if (finalScore <= 0) return;
 
-        // Markiere den aktiven Button
-        document.querySelectorAll('#highscore-mode-selector button').forEach(btn => {
-            btn.classList.remove('btn-primary');
-            if (btn.dataset.mode === mode) {
-                btn.classList.add('btn-primary');
-            }
-        });
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) return;
 
         try {
-            // Schritt 1: Hole die Top-Scores für den ausgewählten Modus
-            const { data: scoresData, error: scoresError } = await supabaseClient
+            // Schritt 1: Füge den neuen Score IMMER ein.
+            // Wichtig: Supabase erwartet ein Array von Objekten.
+            const { error: insertError } = await supabaseClient
                 .from('scores')
-                .select('user_id, score')
-                .eq('game_mode', mode) // Wichtig: Hier filtern wir den Modus
-                .order('score', { ascending: false })
-                .limit(5);
+                .insert([{ user_id: user.id, score: finalScore, game_mode: gameType }]);
 
-            if (scoresError) throw scoresError;
+            if (insertError) throw insertError;
+            console.log(`Neuer Score ${finalScore} für Modus ${gameType} eingefügt.`);
 
-            if (scoresData.length === 0) {
-                highscoreList.innerHTML = '<p>Noch keine Highscores für diesen Modus.</p>';
-                return;
+            // Schritt 2: Finde alle IDs für diesen Modus, sortiert nach bestem Score.
+            const { data: scoreIds, error: fetchIdsError } = await supabaseClient
+                .from('scores')
+                .select('id')
+                .eq('game_mode', gameType)
+                .order('score', { descending: true });
+
+            if (fetchIdsError) throw fetchIdsError;
+
+            // Schritt 3: Wenn es jetzt mehr als 5 Scores gibt, lösche alle überflüssigen.
+            if (scoreIds.length > 5) {
+                // Nimm die IDs aller Einträge, die nicht mehr in den Top 5 sind.
+                const idsToDelete = scoreIds.slice(5).map(item => item.id);
+
+                console.log(`Es gibt ${scoreIds.length} Scores. Lösche die überflüssigen ${idsToDelete.length}.`);
+
+                const { error: deleteError } = await supabaseClient
+                    .from('scores')
+                    .delete()
+                    .in('id', idsToDelete);
+
+                if (deleteError) throw deleteError;
+                console.log("Aufräumen erfolgreich. Nur die Top 5 sind übrig.");
             }
 
-            // Schritt 2: Sammle alle einzigartigen User-IDs
-            const userIds = [...new Set(scoresData.map(entry => entry.user_id))];
-
-            // Schritt 3: Hole die passenden User-Profile
-            const { data: profilesData, error: profilesError } = await supabaseClient
-                .from('profiles') // Wir nutzen die sichere "profiles"-Ansicht
-                .select('id, raw_user_meta_data')
-                .in('id', userIds);
-
-            if (profilesError) throw profilesError;
-
-            // Erstelle eine "Landkarte" für schnellen Zugriff auf die Usernamen
-            const userMap = new Map(profilesData.map(p => [p.id, p.raw_user_meta_data.username]));
-
-            // Schritt 4: Kombiniere Scores mit den Usernamen und zeige sie an
-            highscoreList.innerHTML = scoresData.map((entry, index) => `
-            <div class="flex justify-between items-center p-2 rounded ${index % 2 === 0 ? 'bg-gray-700' : ''}">
-                <span class="font-bold">${index + 1}. ${userMap.get(entry.user_id) || 'Unbekannt'}</span>
-                <span>${entry.score}</span>
-            </div>
-        `).join('');
-
         } catch (error) {
-            highscoreList.innerHTML = `<p class="text-red-500">Fehler: ${error.message}</p>`;
-            console.error("Fehler beim Laden der Highscores:", error);
+            console.error("Ein Fehler ist im Highscore-Prozess aufgetreten:", error);
         }
     }
 
