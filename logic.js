@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentLevelIndex = 0;
     let currentQuestionIndex = 0;
     let score = 0;
+    let highScoreThisSession = 0;
     let questionsForCurrentLevel = [];
     let currentCorrectAnswer = '';
     let userInput = '';
@@ -289,9 +290,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function showMainMenu() {
         cheatsheetToggle.classList.remove('hidden')
         cheatsheet.classList.add('hidden')
-        if (gameMode === 'endless' && score > 0) {
+        if (gameMode === 'endless' && highScoreThisSession > 0) {
             // Übergebe den "endlessType" (letters, words, sentences)
-            saveScore(score, endlessType);
+            saveScore(highScoreThisSession, endlessType);
             score = 0;
             updateScore();
         }
@@ -332,6 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameMode = 'endless';
         endlessType = type;
         score = 0;
+        highScoreThisSession = 0;
         updateScore();
         showScreen(gameScreen);
         setupLevel();
@@ -534,6 +536,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 score += berechneDynamischePunkte(score);
             }
+            if (gameMode === 'endless' && score > highScoreThisSession) {
+                highScoreThisSession = score;
+            }
             updateScore();
         } else {
             feedbackMessage.textContent = `Falsch! Richtig wäre: ${currentCorrectAnswer}`;
@@ -577,6 +582,9 @@ function checkWordAnswer() {
             score += berechneDynamischePunkte(score);
         }
         updateScore();
+        if (gameMode === 'endless' && score > highScoreThisSession) {
+            highScoreThisSession = score;
+        }
         nextButton.classList.remove('hidden');
         latinInputBox.disabled = true;
         skipButton.classList.add('hidden');
