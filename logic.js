@@ -219,6 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return;
+        console.log(finalScore)
 
         try {
             // Schritt 1: Hole die aktuellen Top 5 Scores für diesen Modus
@@ -226,13 +227,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 .from('scores')
                 .select('id, score')
                 .eq('game_mode', gameType)
-                .order('score', { descending: true })
                 .limit(5);
 
             if (fetchError) throw fetchError;
-
             // Schritt 2: Prüfe, ob der neue Score gut genug ist
+            topScores.sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
             const isTopFive = topScores.length < 5 || finalScore > topScores[topScores.length - 1].score;
+            let tempScore = finalScore
+            finalScore = 0;
 
             if (isTopFive) {
                 console.log("Neuer Highscore! Speichere und räume auf...");
@@ -240,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Schritt 3: Füge den neuen Score ein
                 const { error: insertError } = await supabaseClient
                     .from('scores')
-                    .insert({ user_id: user.id, score: finalScore, game_mode: gameType });
+                    .insert({ user_id: user.id, score: tempScore, game_mode: gameType });
 
                 if (insertError) throw insertError;
 
